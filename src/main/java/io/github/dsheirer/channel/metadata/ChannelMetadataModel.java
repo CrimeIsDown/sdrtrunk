@@ -18,14 +18,17 @@
  */
 package io.github.dsheirer.channel.metadata;
 
-import com.google.common.eventbus.Subscribe;
 import io.github.dsheirer.alias.Alias;
 import io.github.dsheirer.controller.channel.Channel;
-import io.github.dsheirer.eventbus.MyEventBus;
 import io.github.dsheirer.identifier.Identifier;
 import io.github.dsheirer.identifier.decoder.DecoderLogicalChannelNameIdentifier;
+import io.github.dsheirer.preference.IPreferenceUpdateListener;
 import io.github.dsheirer.preference.PreferenceType;
+import io.github.dsheirer.preference.UserPreferences;
 import io.github.dsheirer.sample.Listener;
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
+import jakarta.annotation.Resource;
 import java.awt.EventQueue;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -34,10 +37,12 @@ import java.util.List;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 import javax.swing.table.AbstractTableModel;
 
-public class ChannelMetadataModel extends AbstractTableModel implements IChannelMetadataUpdateListener
+@Component("channelMetadataModel")
+public class ChannelMetadataModel extends AbstractTableModel implements IChannelMetadataUpdateListener, IPreferenceUpdateListener
 {
     private final static Logger mLog = LoggerFactory.getLogger(ChannelMetadataModel.class);
 
@@ -56,17 +61,30 @@ public class ChannelMetadataModel extends AbstractTableModel implements IChannel
     private List<ChannelMetadata> mChannelMetadata = new ArrayList();
     private Map<ChannelMetadata,Channel> mMetadataChannelMap = new HashMap();
     private Listener<ChannelAndMetadata> mChannelAddListener;
+    @Resource
+    private UserPreferences mUserPreferences;
 
     public ChannelMetadataModel()
     {
-        MyEventBus.getGlobalEventBus().register(this);
+    }
+
+    @PostConstruct
+    public void postConstruct()
+    {
+        mUserPreferences.addUpdateListener(this);
+    }
+
+    @PreDestroy
+    public void preDestroy()
+    {
+        mUserPreferences.removeUpdateListener(this);
     }
 
     /**
      * Receives preference update notifications via the event bus
      * @param preferenceType that was updated
      */
-    @Subscribe
+    @Override
     public void preferenceUpdated(PreferenceType preferenceType)
     {
         if(preferenceType == PreferenceType.TALKGROUP_FORMAT)

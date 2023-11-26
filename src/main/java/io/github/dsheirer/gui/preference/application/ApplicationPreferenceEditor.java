@@ -19,8 +19,10 @@
 
 package io.github.dsheirer.gui.preference.application;
 
-import io.github.dsheirer.preference.UserPreferences;
+import io.github.dsheirer.gui.preference.PreferenceEditor;
+import io.github.dsheirer.gui.preference.PreferenceEditorType;
 import io.github.dsheirer.preference.application.ApplicationPreference;
+import jakarta.annotation.PostConstruct;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
@@ -38,7 +40,7 @@ import org.controlsfx.control.ToggleSwitch;
 /**
  * Preference settings for application
  */
-public class ApplicationPreferenceEditor extends HBox
+public class ApplicationPreferenceEditor extends PreferenceEditor
 {
     private ApplicationPreference mApplicationPreference;
     private GridPane mEditorPane;
@@ -48,9 +50,13 @@ public class ApplicationPreferenceEditor extends HBox
 
     /**
      * Constructs an instance
-     * @param userPreferences for obtaining reference to preference.
      */
-    public ApplicationPreferenceEditor(UserPreferences userPreferences)
+    public ApplicationPreferenceEditor()
+    {
+    }
+
+    @PostConstruct
+    public void postConstruct()
     {
         mApplicationPreference = userPreferences.getApplicationPreference();
         setMaxWidth(Double.MAX_VALUE);
@@ -61,6 +67,12 @@ public class ApplicationPreferenceEditor extends HBox
         vbox.getChildren().add(getEditorPane());
         HBox.setHgrow(vbox, Priority.ALWAYS);
         getChildren().add(vbox);
+    }
+
+    @Override
+    public PreferenceEditorType getPreferenceEditorType()
+    {
+        return PreferenceEditorType.APPLICATION;
     }
 
     private GridPane getEditorPane()

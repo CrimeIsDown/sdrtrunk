@@ -20,7 +20,6 @@
 package io.github.dsheirer.service.radioreference;
 
 import com.google.common.annotations.VisibleForTesting;
-import io.github.dsheirer.preference.UserPreferences;
 import io.github.dsheirer.rrapi.RadioReferenceException;
 import io.github.dsheirer.rrapi.RadioReferenceService;
 import io.github.dsheirer.rrapi.response.Fault;
@@ -38,17 +37,18 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 /**
  * Service interface to radioreference.com data API with caching for Flavor, Mode, Type and Tag values.
  */
+@Component("radioReference")
 public class RadioReference
 {
     private static final Logger mLog = LoggerFactory.getLogger(RadioReference.class);
 
     public static final String SDRTRUNK_APP_KEY = "88969092";
     private RadioReferenceService mRadioReferenceService;
-    private UserPreferences mUserPreferences;
     private AuthorizationInformation mAuthorizationInformation;
     private StringProperty mUserName = new SimpleStringProperty();
     private StringProperty mPassword = new SimpleStringProperty();
@@ -70,11 +70,9 @@ public class RadioReference
 
     /**
      * Constructs an instance of the radio reference service
-     * @param userPreferences for user credentials and other settings
      */
-    public RadioReference(UserPreferences userPreferences)
+    public RadioReference()
     {
-        mUserPreferences = userPreferences;
     }
 
     /**
@@ -304,7 +302,6 @@ public class RadioReference
             mLoginStatus = LoginStatus.UNKNOWN;
             availableProperty().set(false);
             premiumAccountProperty().set(false);
-
         }
     }
 
@@ -345,38 +342,5 @@ public class RadioReference
         }
 
         login();
-    }
-
-    public static void main(String[] args)
-    {
-        UserPreferences userPreferences = new UserPreferences();
-        RadioReference radioReference = new RadioReference(userPreferences);
-
-        AuthorizationInformation credentials = userPreferences.getRadioReferencePreference().getAuthorizationInformation();
-
-        if(credentials == null)
-        {
-            Scanner scanner = new Scanner(System.in);
-            System.out.print("Username: ");
-            String username = scanner.next();
-            System.out.print("Password: ");
-            String password = scanner.next();
-            credentials = getAuthorizatonInformation(username, password);
-        }
-
-        radioReference.setAuthorizationInformation(credentials);
-
-        if(radioReference.availableProperty().get())
-        {
-            try
-            {
-                UserInfo userInfo = radioReference.getService().getUserInfo();
-                System.out.println("User Name: " + userInfo.getUserName() + " Account Expires:" + userInfo.getExpirationDate());
-            }
-            catch(RadioReferenceException rre)
-            {
-                mLog.error("Error", rre);
-            }
-        }
     }
 }

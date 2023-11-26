@@ -20,6 +20,8 @@
 package io.github.dsheirer.gui.viewer;
 
 import com.google.common.eventbus.EventBus;
+import io.github.dsheirer.audio.call.Call;
+import io.github.dsheirer.gui.control.TimestampTableCellFactory;
 import io.github.dsheirer.controller.channel.Channel;
 import io.github.dsheirer.identifier.IdentifierUpdateNotification;
 import io.github.dsheirer.identifier.configuration.FrequencyConfigurationIdentifier;
@@ -405,6 +407,7 @@ public class P25P1Viewer extends VBox
             timestampColumn.setPrefWidth(110);
             timestampColumn.setText("Time");
             timestampColumn.setCellValueFactory(new PropertyValueFactory<>("timestamp"));
+            timestampColumn.setCellFactory(new TimestampTableCellFactory<Call>());
 
             TableColumn validColumn = new TableColumn();
             validColumn.setPrefWidth(50);

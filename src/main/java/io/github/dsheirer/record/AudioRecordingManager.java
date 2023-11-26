@@ -19,7 +19,10 @@
 
 package io.github.dsheirer.record;
 
-import io.github.dsheirer.audio.AudioSegment;
+import io.github.dsheirer.audio.call.AudioSegment;
+import io.github.dsheirer.audio.call.Call;
+import io.github.dsheirer.audio.call.CompletedCall;
+import io.github.dsheirer.audio.call.ICallEventListener;
 import io.github.dsheirer.identifier.Form;
 import io.github.dsheirer.identifier.Identifier;
 import io.github.dsheirer.identifier.IdentifierClass;
@@ -31,11 +34,14 @@ import io.github.dsheirer.identifier.tone.Tone;
 import io.github.dsheirer.identifier.tone.ToneIdentifier;
 import io.github.dsheirer.identifier.tone.ToneSequence;
 import io.github.dsheirer.preference.UserPreferences;
-import io.github.dsheirer.sample.Listener;
 import io.github.dsheirer.util.StringUtils;
 import io.github.dsheirer.util.ThreadPool;
 import io.github.dsheirer.util.TimeStamp;
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
+import jakarta.annotation.Resource;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.LinkedTransferQueue;
@@ -45,37 +51,39 @@ import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 /**
  * Monitors audio segments and upon completion records any audio segments that have been flagged as recordable
  */
-public class AudioRecordingManager implements Listener<AudioSegment>
+@Component("audioRecordingManager")
+public class AudioRecordingManager implements ICallEventListener
 {
     private final static Logger mLog = LoggerFactory.getLogger(AudioRecordingManager.class);
-    private LinkedTransferQueue<AudioSegment> mCompletedAudioSegmentQueue = new LinkedTransferQueue<>();
-    private ScheduledFuture<?> mQueueProcessorHandle;
+    @Resource
     private UserPreferences mUserPreferences;
+    private LinkedTransferQueue<CompletedCall> mCompletedCallQueue = new LinkedTransferQueue<>();
+    private ScheduledFuture<?> mQueueProcessorHandle;
     private int mUnknownAudioRecordingIndex = 1;
     private int mDuplicateAudioRecordingSuffix = 1;
     private String mPreviousRecordingPath = null;
 
     /**
      * Constructs an instance
-     * @param userPreferences to determine audio recording format
      */
-    public AudioRecordingManager(UserPreferences userPreferences)
+    public AudioRecordingManager()
     {
-        mUserPreferences = userPreferences;
     }
 
     /**
      * Starts the manager and begins audio segment recording.
      */
+    @PostConstruct
     public void start()
     {
         if(mQueueProcessorHandle == null)
         {
-            mQueueProcessorHandle = ThreadPool.SCHEDULED.scheduleAtFixedRate(new QueueProcessor(),
+            mQueueProcessorHandle = ThreadPool.SCHEDULED.scheduleAtFixedRate(new CompletedCallProcessor(),
                 0, 1, TimeUnit.SECONDS);
         }
     }
@@ -83,30 +91,34 @@ public class AudioRecordingManager implements Listener<AudioSegment>
     /**
      * Stops the manager and records any remaining queued audio segments.
      */
+    @PreDestroy
     public void stop()
     {
         if(mQueueProcessorHandle != null)
         {
             mQueueProcessorHandle.cancel(true);
-            processAudioSegments();
+            processCompletedCalls();
             mQueueProcessorHandle = null;
         }
     }
 
-    /**
-     * Primary receive method for incoming audio segments to be recorded
-     */
     @Override
-    public void receive(AudioSegment audioSegment)
-    {
-        audioSegment.completeProperty().addListener(new AudioSegmentCompletionMonitor(audioSegment));
-    }
+    public void added(Call call) {} //Not implemented
+
+    @Override
+    public void updated(Call call) {} //Not implemented
+
+    @Override
+    public void deleted(Call call) {} //Not implemented
 
     /**
-     * Processes audio segments that have been flagged as complete.
-     * @param audioSegment
+     * Implements the ICallEventListener interface to receive completed audio segments/calls and enqueue them for
+     * recording
+     * @param call that was completed.
+     * @param audioSegment for the call
      */
-    public void processCompletedAudioSegment(AudioSegment audioSegment)
+    @Override
+    public void completed(Call call, AudioSegment audioSegment)
     {
         //Debug
         if(audioSegment.getAudioBufferCount() == 0)
@@ -123,52 +135,50 @@ public class AudioRecordingManager implements Listener<AudioSegment>
 
         if(audioSegment.recordAudioProperty().get())
         {
-            mCompletedAudioSegmentQueue.add(audioSegment);
+            mCompletedCallQueue.add(new CompletedCall(call, audioSegment));
         }
         else
         {
-            audioSegment.decrementConsumerCount();
+            audioSegment.removeLease(getClass().toString());
         }
     }
 
     /**
-     * Processes any queued audio segments
+     * Processes any queued calls/audio segments
      */
-    private void processAudioSegments()
+    private void processCompletedCalls()
     {
         RecordFormat recordFormat = mUserPreferences.getRecordPreference().getAudioRecordFormat();
-        AudioSegment audioSegment = mCompletedAudioSegmentQueue.poll();
+        CompletedCall completedCall = mCompletedCallQueue.poll();
 
-        while(audioSegment != null)
+        while(completedCall != null)
         {
-            if(audioSegment.isDuplicate() && mUserPreferences.getDuplicateCallDetectionPreference().isDuplicateRecordingSuppressionEnabled())
+            if(!(completedCall.audioSegment().isDuplicate() &&
+                mUserPreferences.getCallManagementPreference().isDuplicateRecordingSuppressionEnabled()))
             {
-                audioSegment.decrementConsumerCount();
-            }
-            else
-            {
-                Path path = getAudioRecordingPath(audioSegment.getIdentifierCollection(), recordFormat);
+                Path source = Path.of(completedCall.call().getFile());
+                Path target = getAudioRecordingPath(completedCall.audioSegment().getIdentifierCollection(), recordFormat);
 
                 try
                 {
-                    AudioSegmentRecorder.record(audioSegment, path, recordFormat, mUserPreferences);
+                    Files.copy(source, target);
                 }
                 catch(IOException ioe)
                 {
-                    mLog.error("Error recording audio segment to [" + path.toString() + "]");
+                    mLog.error("Error recording audio segment to [" + target + "]");
                 }
-
-                audioSegment.decrementConsumerCount();
             }
 
+            completedCall.audioSegment().removeLease(getClass().toString());
+
             //Grab the next one to record
-            audioSegment = mCompletedAudioSegmentQueue.poll();
+            completedCall = mCompletedCallQueue.poll();
         }
     }
 
     /**
      * Base path to recordings folder
-     * @return
+     * @return recording base path
      */
     public Path getRecordingBasePath()
     {
@@ -321,39 +331,17 @@ public class AudioRecordingManager implements Listener<AudioSegment>
         return getRecordingBasePath().resolve(sbFinal.toString());
     }
 
-
     /**
-     * Audio segment completion monitor.  Listens for the audio segment's complete flag to be set and then
-     * queues the audio segment for recording.
+     * Threaded queue processor to process/record each completed call
      */
-    public class AudioSegmentCompletionMonitor implements ChangeListener<Boolean>
-    {
-        private AudioSegment mAudioSegment;
-
-        public AudioSegmentCompletionMonitor(AudioSegment audioSegment)
-        {
-            mAudioSegment = audioSegment;
-        }
-
-        @Override
-        public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue)
-        {
-            mAudioSegment.completeProperty().removeListener(this);
-            processCompletedAudioSegment(mAudioSegment);
-        }
-    }
-
-    /**
-     * Threaded queue processor to process/record each recordable audio segment
-     */
-    public class QueueProcessor implements Runnable
+    public class CompletedCallProcessor implements Runnable
     {
         @Override
         public void run()
         {
             try
             {
-                processAudioSegments();
+                processCompletedCalls();
             }
             catch(Throwable t)
             {

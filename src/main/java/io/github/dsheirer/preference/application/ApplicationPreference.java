@@ -33,11 +33,13 @@ public class ApplicationPreference extends Preference
 {
     private static final String PREFERENCE_KEY_CHANNEL_AUTO_DIAGNOSTIC_MONITORING = "automatic.diagnostic.monitoring";
     private static final String PREFERENCE_KEY_CHANNEL_AUTO_START_TIMEOUT = "channel.auto.start.timeout";
+    private static final String PREFERENCE_KEY_SPECTRAL_DISPLAY_ENABLED = "spectral.display.enabled";
 
     private final static Logger mLog = LoggerFactory.getLogger(ApplicationPreference.class);
-    private Preferences mPreferences = Preferences.userNodeForPackage(ApplicationPreference.class);
+    private final Preferences mPreferences = Preferences.userNodeForPackage(ApplicationPreference.class);
     private Integer mChannelAutoStartTimeout;
     private Boolean mAutomaticDiagnosticMonitoring;
+    private Boolean mSpectralDisplayEnabled;
 
     /**
      * Constructs an instance
@@ -102,6 +104,31 @@ public class ApplicationPreference extends Preference
     {
         mAutomaticDiagnosticMonitoring = enabled;
         mPreferences.putBoolean(PREFERENCE_KEY_CHANNEL_AUTO_DIAGNOSTIC_MONITORING, enabled);
+        notifyPreferenceUpdated();
+    }
+
+    /**
+     * Indicates if the spectral display is enabled.
+     * @return true if enabled.
+     */
+    public boolean isSpectralDisplayEnabled()
+    {
+        if(mSpectralDisplayEnabled == null)
+        {
+            mSpectralDisplayEnabled = mPreferences.getBoolean(PREFERENCE_KEY_SPECTRAL_DISPLAY_ENABLED, true);
+        }
+
+        return mSpectralDisplayEnabled;
+    }
+
+    /**
+     * Sets the enabled state for the spectral display.
+     * @param enabled true or false
+     */
+    public void setSpectralDisplayEnabled(boolean enabled)
+    {
+        mSpectralDisplayEnabled = enabled;
+        mPreferences.putBoolean(PREFERENCE_KEY_SPECTRAL_DISPLAY_ENABLED, enabled);
         notifyPreferenceUpdated();
     }
 }

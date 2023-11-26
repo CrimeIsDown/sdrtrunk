@@ -316,7 +316,7 @@ public class HeterodyneChannelizerViewer extends JFrame
         public PrimarySpectrumPanel(SettingsManager settingsManager, double sampleRate)
         {
             setLayout(new MigLayout("insets 0 0 0 0", "[grow,fill]", "[grow,fill]"));
-            mSpectrumPanel = new SpectrumPanel(settingsManager);
+            mSpectrumPanel = new SpectrumPanel();
             mSpectrumPanel.setSampleSize(28);
             add(mSpectrumPanel);
 
@@ -354,7 +354,7 @@ public class HeterodyneChannelizerViewer extends JFrame
         public ChannelPanel(SettingsManager settingsManager, double sampleRate, long frequency, int bandwidth, boolean enableLogging)
         {
             setLayout(new MigLayout("insets 0 0 0 0", "[center,grow,fill][]", "[grow,fill][]"));
-            mSpectrumPanel = new SpectrumPanel(settingsManager);
+            mSpectrumPanel = new SpectrumPanel();
             mSpectrumPanel.setSampleSize(32);
             add(mSpectrumPanel, "span");
 
@@ -436,7 +436,7 @@ public class HeterodyneChannelizerViewer extends JFrame
         {
             mSource = source;
             setLayout(new MigLayout("insets 0 0 0 0", "[center,grow,fill][]", "[grow,fill][]"));
-            mSpectrumPanel = new SpectrumPanel(settingsManager);
+            mSpectrumPanel = new SpectrumPanel();
             mSpectrumPanel.setSampleSize(32);
             add(mSpectrumPanel, "span");
             add(new JLabel("Index:" + index));

@@ -82,7 +82,7 @@ public class ChannelMetadata implements Listener<IdentifierUpdateNotification>, 
      */
     public ChannelMetadata(AliasModel aliasModel)
     {
-        this(aliasModel, null);
+        mAliasModel = aliasModel;
     }
 
     /**
