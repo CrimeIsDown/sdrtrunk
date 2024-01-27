@@ -412,7 +412,8 @@ public class SDRTrunk
         boolean headless = GraphicsEnvironment.isHeadless();
 
         //Set the user's preferred location for the database prior to starting the application
-        String dbpath = new UserPreferences().getDirectoryPreference().getDirectoryApplicationRoot().toString();
+//        String dbpath = new UserPreferences().getDirectoryPreference().getDirectoryApplicationRoot().toString();
+        String dbpath = new UserPreferences().getDirectoryPreference().getDirectoryDatabase().getParent().toString();
         System.setProperty("derby.system.home", dbpath);
 
         ConfigurableApplicationContext context = new SpringApplicationBuilder(SDRTrunk.class)
