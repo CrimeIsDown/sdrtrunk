@@ -72,7 +72,7 @@ public class RdioScannerBroadcaster extends AbstractAudioBroadcaster<RdioScanner
     private Queue<AudioRecording> mAudioRecordingQueue = new LinkedTransferQueue<>();
     private ScheduledFuture<?> mAudioRecordingProcessorFuture;
     private HttpClient mHttpClient = HttpClient.newBuilder()
-        .version(HttpClient.Version.HTTP_2)
+        .version(HttpClient.Version.HTTP_1_1)
         .followRedirects(HttpClient.Redirect.NORMAL)
         .connectTimeout(Duration.ofSeconds(20))
         .build();
@@ -215,7 +215,7 @@ public class RdioScannerBroadcaster extends AbstractAudioBroadcaster<RdioScanner
     private void processRecordingQueue()
     {
 
-        
+
         while(connected() && !mAudioRecordingQueue.isEmpty())
         {
             final AudioRecording audioRecording = mAudioRecordingQueue.poll();
@@ -306,8 +306,8 @@ public class RdioScannerBroadcaster extends AbstractAudioBroadcaster<RdioScanner
                                     {
                                         incrementStreamedAudioCount();
                                         broadcast(new BroadcastEvent(RdioScannerBroadcaster.this,
-                                            BroadcastEvent.Event.BROADCASTER_STREAMED_COUNT_CHANGE)); 
-                                        audioRecording.removePendingReplay(); 
+                                            BroadcastEvent.Event.BROADCASTER_STREAMED_COUNT_CHANGE));
+                                        audioRecording.removePendingReplay();
                                     }
                                     else if(fileResponseString.contains("duplicate call rejected"))
                                     {
@@ -324,7 +324,7 @@ public class RdioScannerBroadcaster extends AbstractAudioBroadcaster<RdioScanner
 
 
                                 }
-                         
+
                             });
                     }
                     else
@@ -410,7 +410,7 @@ public class RdioScannerBroadcaster extends AbstractAudioBroadcaster<RdioScanner
 
     /**
      * Creates a formatted string with the TO identifiers or uses a default of zero (0)
-     * 
+     *
      */
     private static String getTo(AudioRecording audioRecording)
     {
@@ -436,7 +436,7 @@ public class RdioScannerBroadcaster extends AbstractAudioBroadcaster<RdioScanner
     /**
      * Creates a formatted string with the Talkgroup Label from the Audio Recording Alias
      * If this is a PatchGroup we return only the first label as the primary talkgroup label.
-     * 
+     *
      */
     private String getTalkgroupLabel(AudioRecording audioRecording)
     {
@@ -454,14 +454,14 @@ public class RdioScannerBroadcaster extends AbstractAudioBroadcaster<RdioScanner
             }
 
         }
-            
+
         return sb.toString();
     }
 
     /**
      * Creates a formatted string with the Talkgroup Group from the Audio Recording Alias
      * If this is a PatchGroup we return only the first group as the primary talkgroup group.
-     * 
+     *
      */
     private String getTalkgroupGroup(AudioRecording audioRecording)
     {
@@ -485,7 +485,7 @@ public class RdioScannerBroadcaster extends AbstractAudioBroadcaster<RdioScanner
     /**
      * Creates a formatted string with the System Label from the Audio Recording Alias
      * If this is a PatchGroup we return only the first sytem as the primary talkgroup system.
-     * 
+     *
      */
     private String getSystemLabel(AudioRecording audioRecording)
     {
@@ -513,9 +513,9 @@ public class RdioScannerBroadcaster extends AbstractAudioBroadcaster<RdioScanner
 
             StringBuilder sb = new StringBuilder();
             sb.append("[");
-            
+
             sb.append(patchGroup.getPatchGroup().getValue().toString());
-            
+
             for(TalkgroupIdentifier patched: patchGroup.getPatchedTalkgroupIdentifiers())
             {
                 sb.append(",").append(patched.getValue());
@@ -525,7 +525,7 @@ public class RdioScannerBroadcaster extends AbstractAudioBroadcaster<RdioScanner
             {
                 sb.append(",").append(patched.getValue());
             }
-            
+
             sb.append("]");
             return sb.toString();
         }
