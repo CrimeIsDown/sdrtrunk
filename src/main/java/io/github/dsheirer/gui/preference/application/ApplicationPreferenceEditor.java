@@ -21,8 +21,10 @@ package io.github.dsheirer.gui.preference.application;
 
 import io.github.dsheirer.gui.preference.PreferenceEditor;
 import io.github.dsheirer.gui.preference.PreferenceEditorType;
+import io.github.dsheirer.preference.UserPreferences;
 import io.github.dsheirer.preference.application.ApplicationPreference;
 import jakarta.annotation.PostConstruct;
+import jakarta.annotation.Resource;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
@@ -47,6 +49,8 @@ public class ApplicationPreferenceEditor extends PreferenceEditor
     private Label mAutoStartTimeoutLabel;
     private Spinner<Integer> mTimeoutSpinner;
     private ToggleSwitch mAutomaticDiagnosticMonitoringToggle;
+    @Resource
+    private UserPreferences mUserPreferences;
 
     /**
      * Constructs an instance
@@ -58,7 +62,7 @@ public class ApplicationPreferenceEditor extends PreferenceEditor
     @PostConstruct
     public void postConstruct()
     {
-        mApplicationPreference = userPreferences.getApplicationPreference();
+        mApplicationPreference = mUserPreferences.getApplicationPreference();
         setMaxWidth(Double.MAX_VALUE);
 
         VBox vbox = new VBox();

@@ -19,12 +19,14 @@
 
 package io.github.dsheirer.monitor;
 
+import io.github.dsheirer.channel.metadata.ChannelMetadataModel;
 import io.github.dsheirer.controller.channel.ChannelProcessingManager;
 import io.github.dsheirer.log.LoggingSuppressor;
 import io.github.dsheirer.preference.UserPreferences;
 import io.github.dsheirer.source.tuner.manager.TunerManager;
 import io.github.dsheirer.util.ThreadPool;
 import io.github.dsheirer.util.TimeStamp;
+import jakarta.annotation.Resource;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadInfo;
@@ -42,18 +44,22 @@ import java.util.jar.Manifest;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 import javax.swing.JOptionPane;
 
 /**
  * Utility class for monitoring system components and producing logging reports.
  */
+@Component("diagnosticMonitor")
 public class DiagnosticMonitor
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(DiagnosticMonitor.class);
     private final LoggingSuppressor LOG_SUPPRESSOR = new LoggingSuppressor(LOGGER);
     private static final String DIVIDER = "\n\n=========================================================================\n\n";
     private UserPreferences mUserPreferences;
+    @Resource
+    private ChannelMetadataModel mChannelMetadataModel;
     private ChannelProcessingManager mChannelProcessingManager;
     private TunerManager mTunerManager;
     private ScheduledFuture<?> mBlockedThreadMonitorHandle;
@@ -70,12 +76,12 @@ public class DiagnosticMonitor
      * @param headless to indicate if the thread deadlock monitor should show a user notification.
      */
     public DiagnosticMonitor(UserPreferences userPreferences, ChannelProcessingManager channelProcessingManager,
-                             TunerManager tunerManager, boolean headless)
+                             TunerManager tunerManager)
     {
         mUserPreferences = userPreferences;
         mChannelProcessingManager = channelProcessingManager;
         mTunerManager = tunerManager;
-        mHeadless = headless;
+        mHeadless = false;
     }
 
     /**
@@ -186,7 +192,7 @@ public class DiagnosticMonitor
         sb.append(DIVIDER);
         sb.append(mChannelProcessingManager.getDiagnosticInformation());
         sb.append(DIVIDER);
-        sb.append(mChannelProcessingManager.getChannelMetadataModel().getDiagnosticInformation());
+        sb.append(mChannelMetadataModel.getDiagnosticInformation());
         sb.append(DIVIDER);
         sb.append(getThreadDumpReport());
         sb.append(DIVIDER);

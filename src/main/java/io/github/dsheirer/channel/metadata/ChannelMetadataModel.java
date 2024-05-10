@@ -140,11 +140,6 @@ public class ChannelMetadataModel extends AbstractTableModel implements IChannel
         return sb.toString();
     }
 
-    public void dispose()
-    {
-        MyEventBus.getGlobalEventBus().unregister(this);
-    }
-
     /**
      * Lookup model row for the specified channel metadata
      */

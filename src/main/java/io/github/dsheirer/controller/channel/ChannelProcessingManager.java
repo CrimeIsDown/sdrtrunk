@@ -565,7 +565,7 @@ public class ChannelProcessingManager implements Listener<ChannelEvent>
             {
                 added = true;
                 mProcessingChainsMap.put(channel, processingChain);
-                getChannelMetadataModel().add(new ChannelAndMetadata(channel, processingChain.getChannelState().getChannelMetadata()));
+                mChannelMetadataModel.add(new ChannelAndMetadata(channel, processingChain.getChannelState().getChannelMetadata()));
             }
         }
         finally

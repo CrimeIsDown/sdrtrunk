@@ -21,6 +21,8 @@ package io.github.dsheirer.gui;
 
 import com.jidesoft.plaf.LookAndFeelFactory;
 import com.jidesoft.swing.JideSplitPane;
+
+import io.github.dsheirer.alias.AliasModel;
 import io.github.dsheirer.audio.broadcast.BroadcastStatusPanel;
 import io.github.dsheirer.controller.ControllerPanel;
 import io.github.dsheirer.controller.channel.Channel;
@@ -36,7 +38,10 @@ import io.github.dsheirer.gui.preference.PreferenceEditorType;
 import io.github.dsheirer.gui.preference.ViewUserPreferenceEditorRequest;
 import io.github.dsheirer.gui.preference.calibration.CalibrationDialog;
 import io.github.dsheirer.gui.viewer.ViewRecordingViewerRequest;
+import io.github.dsheirer.module.log.EventLogManager;
+import io.github.dsheirer.monitor.DiagnosticMonitor;
 import io.github.dsheirer.monitor.ResourceMonitor;
+import io.github.dsheirer.playlist.PlaylistManager;
 import io.github.dsheirer.preference.UserPreferences;
 import io.github.dsheirer.properties.SystemProperties;
 import io.github.dsheirer.sample.Listener;
@@ -117,7 +122,13 @@ public class SDRTrunkUI extends JFrame implements Listener<TunerEvent>
     @Resource
     private ChannelProcessingManager mChannelProcessingManager;
     @Resource
+    private EventLogManager mEventLogManager;
+    @Resource
+    private PlaylistManager mPlaylistManager;
+    @Resource
     private ControllerPanel mControllerPanel;
+    @Resource
+    private DiagnosticMonitor mDiagnosticMonitor;
     @Resource
     private DiscoveredTunerModel mDiscoveredTunerModel;
     @Resource
@@ -321,6 +332,46 @@ public class SDRTrunkUI extends JFrame implements Listener<TunerEvent>
 
         JMenu fileMenu = new JMenu("File");
         menuBar.add(fileMenu);
+
+        JMenuItem processingStatusReportMenuItem = new JMenuItem("Processing Diagnostic Report");
+        processingStatusReportMenuItem.addActionListener(e -> {
+            try
+            {
+                Path path = mDiagnosticMonitor.generateProcessingDiagnosticReport("User initiated diagnostic report");
+
+                JOptionPane.showMessageDialog(this, "Report created: " +
+                        path.toString(), "Processing Status Report Created", JOptionPane.INFORMATION_MESSAGE);
+            }
+            catch(IOException ioe)
+            {
+                mLog.error("Error creating processing status report file", ioe);
+                JOptionPane.showMessageDialog(this, "Unable to create report file.  Please " +
+                        "see application log for details.", "Processing Status Report Failed", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+
+        JMenuItem threadDumpReportMenuItem = new JMenuItem("Thread Dump Report");
+        threadDumpReportMenuItem.addActionListener(e -> {
+            try
+            {
+                Path path = mDiagnosticMonitor.generateThreadDumpReport();
+
+                JOptionPane.showMessageDialog(this, "Report created: " +
+                        path.toString(), "Thread Dump Report Created", JOptionPane.INFORMATION_MESSAGE);
+            }
+            catch(IOException ioe)
+            {
+                mLog.error("Error creating thread dump report file", ioe);
+                JOptionPane.showMessageDialog(this, "Unable to create report file.  Please " +
+                        "see application log for details.", "Thread Dump Report Failed", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+
+        JMenu diagnosticMenu = new JMenu(("Reports"));
+        diagnosticMenu.add(processingStatusReportMenuItem);
+        diagnosticMenu.add(threadDumpReportMenuItem);
+        fileMenu.add(diagnosticMenu);
+        fileMenu.add(new JSeparator(JSeparator.HORIZONTAL));
 
         JMenuItem exitMenu = new JMenuItem("Exit");
         exitMenu.addActionListener(event -> {

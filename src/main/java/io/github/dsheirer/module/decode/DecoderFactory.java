@@ -109,6 +109,7 @@ import io.github.dsheirer.source.config.SourceConfigTunerMultipleFrequency;
 import io.github.dsheirer.source.tuner.channel.rotation.ChannelRotationMonitor;
 import jakarta.annotation.Resource;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -184,7 +185,7 @@ public class DecoderFactory
                 processLTRNet(channel, modules, aliasList, (DecodeConfigLTRNet) decodeConfig);
                 break;
             case MPT1327:
-                processMPT1327(channelMapModel, channel, modules, aliasList, channelType,
+                processMPT1327(mChannelMapModel, channel, modules, aliasList, channelType,
                         (DecodeConfigMPT1327) decodeConfig);
                 break;
             case PASSPORT:
@@ -249,11 +250,11 @@ public class DecoderFactory
         if(channel.getSourceConfiguration() instanceof SourceConfigTunerMultipleFrequency &&
                 ((SourceConfigTunerMultipleFrequency)channel.getSourceConfiguration()).hasMultipleFrequencies())
         {
-            List<State> activeStates = new ArrayList<>();
+            Collection<State> activeStates = new ArrayList<>();
             activeStates.add(State.CONTROL);
             modules.add(new ChannelRotationMonitor(activeStates,
                     ((SourceConfigTunerMultipleFrequency)channel.getSourceConfiguration()).getFrequencyRotationDelay(),
-                    userPreferences));
+                    mUserPreferences));
         }
     }
 
@@ -297,9 +298,9 @@ public class DecoderFactory
         if(channel.getSourceConfiguration() instanceof SourceConfigTunerMultipleFrequency sctmf &&
             sctmf.hasMultipleFrequencies())
         {
-            List<State> activeStates = new ArrayList<>();
+            Collection<State> activeStates = new ArrayList<>();
             activeStates.add(State.CONTROL);
-            modules.add(new ChannelRotationMonitor(activeStates, sctmf.getFrequencyRotationDelay()));
+            modules.add(new ChannelRotationMonitor(activeStates, sctmf.getFrequencyRotationDelay(), mUserPreferences));
         }
     }
 
@@ -328,7 +329,7 @@ public class DecoderFactory
      * @param channelType for control or traffic
      * @param mptConfig configuration
      */
-    private static void processMPT1327(ChannelMapModel channelMapModel, Channel channel, List<Module> modules,
+    private void processMPT1327(ChannelMapModel channelMapModel, Channel channel, List<Module> modules,
                                        AliasList aliasList, ChannelType channelType, DecodeConfigMPT1327 decodeConfig)
     {
         DecodeConfigMPT1327 mptConfig = decodeConfig;
@@ -365,9 +366,9 @@ public class DecoderFactory
         if(channel.getSourceConfiguration() instanceof SourceConfigTunerMultipleFrequency sctmf &&
             sctmf.hasMultipleFrequencies())
         {
-            List<State> activeStates = new ArrayList<>();
+            Collection<State> activeStates = new ArrayList<>();
             activeStates.add(State.CONTROL);
-            modules.add(new ChannelRotationMonitor(activeStates, sctmf.getFrequencyRotationDelay()));
+            modules.add(new ChannelRotationMonitor(activeStates, sctmf.getFrequencyRotationDelay(), mUserPreferences));
         }
     }
 

@@ -103,7 +103,7 @@ dependencies {
     implementation 'com.github.wendykierp:JTransforms:3.1'
     implementation 'com.google.code.gson:gson:2.10'
     implementation 'com.google.guava:guava:31.1-jre'
-    implementation 'com.jidesoft:jide-oss:3.6.18'
+    implementation 'com.formdev:jide-oss:3.7.15'
     implementation 'com.miglayout:miglayout-swing:11.0'
     implementation 'com.mpatric:mp3agic:0.9.1'
     implementation 'commons-io:commons-io:2.11.0'
