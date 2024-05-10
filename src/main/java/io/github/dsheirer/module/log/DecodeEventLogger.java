@@ -46,7 +46,6 @@ public class DecodeEventLogger extends EventLogger implements IDecodeEventListen
     private SimpleDateFormat mTimestampFormat = TimestampFormat.TIMESTAMP_COLONS.getFormatter();
     private DecimalFormat mFrequencyFormat = new DecimalFormat("0.000000");
     private AliasList mAliasList;
-    @Resource
     private AliasModel mAliasModel;
 
     /**
@@ -65,9 +64,10 @@ public class DecodeEventLogger extends EventLogger implements IDecodeEventListen
      * @param fileNameSuffix suffix to add to the file name
      * @param frequency to include in the file name
      */
-    public DecodeEventLogger(Path logDirectory, String fileNameSuffix, long frequency)
+    public DecodeEventLogger(Path logDirectory, String fileNameSuffix, long frequency, AliasModel aliasModel)
     {
         super(logDirectory, fileNameSuffix, frequency);
+        mAliasModel = aliasModel;
     }
 
     @Override
